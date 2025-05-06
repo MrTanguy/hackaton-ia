@@ -139,7 +139,7 @@ export default function App() {
               score: 0,
               health: 100
             });
-          }}>
+          }}/>
         <TouchableOpacity style={styles.button} onPress={() => {
           setGameOver(false);
           setQuiz({
