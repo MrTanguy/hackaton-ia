@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import QuestionCard from './components/QuestionCard';
 import { fetchQuestion } from './lib/ai';
+=======
+import { SafeAreaView, StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { fetchQuestion } from './lib/ai';
+import QuestionCard from './components/QuestionCard';
+>>>>>>> c66b3b2 (feat : WebApplication Disponible)
 
 export default function App() {
   const [quiz, setQuiz] = useState({
@@ -15,7 +21,28 @@ export default function App() {
     health: 100
   });
   const [loading, setLoading] = useState(false);
+<<<<<<< HEAD
   const [gameOver, setGameOver] = useState(false);
+  const [pseudo, setPseudo] = useState('');
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [quizStarted, setQuizStarted] = useState(false);
+
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      const storedLeaderboard = await AsyncStorage.getItem('leaderboard');
+      if (storedLeaderboard) {
+        setLeaderboard(JSON.parse(storedLeaderboard));
+      }
+    };
+    loadLeaderboard();
+  }, []);
+
+  const saveScore = async () => {
+    const newEntry = { pseudo, score: quiz.score };
+    const updatedLeaderboard = [...leaderboard, newEntry].sort((a, b) => b.score - a.score).slice(0, 10);
+    setLeaderboard(updatedLeaderboard);
+    await AsyncStorage.setItem('leaderboard', JSON.stringify(updatedLeaderboard));
+  };
 
   const loadQuestion = async () => {
     setLoading(true);
@@ -41,6 +68,7 @@ export default function App() {
     }));
 
     setTimeout(() => {
+<<<<<<< HEAD
       setQuiz(prev => {
         const newHealth = isCorrect ? prev.health : prev.health - 20;
         if (newHealth <= 0) {
@@ -57,31 +85,91 @@ export default function App() {
     }, 1500);
   };
 
+  if (!quizStarted) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.title}>🌍 EcoQuiz</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Entrez votre pseudo"
+          value={pseudo}
+          onChangeText={setPseudo}
+        />
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: pseudo ? '#16a34a' : '#ccc' }]}
+          onPress={() => {
+            if (pseudo) {
+              setQuizStarted(true);
+              loadQuestion();
+            }
+          }}
+          disabled={!pseudo}>
+          <Text style={styles.buttonText}>Start Quiz</Text>
+        </TouchableOpacity>
+        <Text style={styles.leaderboardTitle}>Classement :</Text>
+        <FlatList
+          data={leaderboard}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <Text style={styles.leaderboardItem}>
+              {item.pseudo}: {item.score}
+            </Text>
+          )}
+        />
+      </SafeAreaView>
+    );
+  }
+
   if (gameOver) {
     return (
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>🌍 EcoQuiz</Text>
         <Text style={styles.gameOverText}>Vous avez perdu !</Text>
         <Text style={styles.score}>Score final : {quiz.score}</Text>
-        <TouchableOpacity style={styles.button} onPress={() => {
-          setGameOver(false);
-          setQuiz({
-            question: '',
-            options: [],
-            correctAnswer: '',
-            imageUrl: '',
-            selected: '',
-            feedback: '',
-            score: 0,
-            health: 100
-          });
-        }}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => {
+            saveScore();
+            setGameOver(false);
+            setQuizStarted(false);
+            setQuiz({
+              question: '',
+              options: [],
+              correctAnswer: '',
+              imageUrl: '',
+              selected: '',
+              feedback: '',
+              score: 0,
+              health: 100
+            });
+          }}>
           <Text style={styles.buttonText}>Recommencer</Text>
         </TouchableOpacity>
+        <Text style={styles.leaderboardTitle}>Classement :</Text>
+        <FlatList
+          data={leaderboard}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <Text style={styles.leaderboardItem}>
+              {item.pseudo}: {item.score}
+            </Text>
+          )}
+        />
       </SafeAreaView>
     );
   }
 
+=======
+      setQuiz(prev => ({
+        ...prev,
+        score: isCorrect ? prev.score + 1 : prev.score,
+        health: isCorrect ? prev.health : prev.health - 20
+      }));
+      loadQuestion();
+    }, 1500);
+  };
+
+>>>>>>> c66b3b2 (feat : WebApplication Disponible)
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>🌍 EcoQuiz</Text>
@@ -97,9 +185,6 @@ export default function App() {
         <QuestionCard quiz={quiz} handleSelect={handleSelect} />
       )}
       <Text style={styles.score}>Score: {quiz.score}</Text>
-      <TouchableOpacity style={styles.button} onPress={loadQuestion}>
-        <Text style={styles.buttonText}>{quiz.question ? 'Next Question' : 'Start Quiz'}</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -113,5 +198,9 @@ const styles = StyleSheet.create({
   score: { textAlign: 'center', marginVertical: 10, fontSize: 16 },
   button: { backgroundColor: '#16a34a', padding: 10, borderRadius: 10, alignItems: 'center', marginTop: 10 },
   buttonText: { color: 'white', fontWeight: 'bold' },
+<<<<<<< HEAD
   gameOverText: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginVertical: 20, color: 'red' },
+  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 5, padding: 10, marginVertical: 10 },
+  leaderboardTitle: { fontSize: 20, fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
+  leaderboardItem: { fontSize: 16, textAlign: 'center', marginVertical: 5 },
 });
