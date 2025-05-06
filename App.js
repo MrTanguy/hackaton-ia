@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { ActivityIndicator, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import QuestionCard from './components/QuestionCard';
 import { fetchQuestion } from './lib/ai';
+=======
+import { SafeAreaView, StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { fetchQuestion } from './lib/ai';
+import QuestionCard from './components/QuestionCard';
+>>>>>>> c66b3b2 (feat : WebApplication Disponible)
 
 export default function App() {
   const [quiz, setQuiz] = useState({
@@ -15,7 +21,10 @@ export default function App() {
     health: 100
   });
   const [loading, setLoading] = useState(false);
+<<<<<<< HEAD
   const [gameOver, setGameOver] = useState(false);
+=======
+>>>>>>> c66b3b2 (feat : WebApplication Disponible)
 
   const loadQuestion = async () => {
     setLoading(true);
@@ -41,6 +50,7 @@ export default function App() {
     }));
 
     setTimeout(() => {
+<<<<<<< HEAD
       setQuiz(prev => {
         const newHealth = isCorrect ? prev.health : prev.health - 20;
         if (newHealth <= 0) {
@@ -82,6 +92,17 @@ export default function App() {
     );
   }
 
+=======
+      setQuiz(prev => ({
+        ...prev,
+        score: isCorrect ? prev.score + 1 : prev.score,
+        health: isCorrect ? prev.health : prev.health - 20
+      }));
+      loadQuestion();
+    }, 1500);
+  };
+
+>>>>>>> c66b3b2 (feat : WebApplication Disponible)
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>🌍 EcoQuiz</Text>
@@ -113,5 +134,8 @@ const styles = StyleSheet.create({
   score: { textAlign: 'center', marginVertical: 10, fontSize: 16 },
   button: { backgroundColor: '#16a34a', padding: 10, borderRadius: 10, alignItems: 'center', marginTop: 10 },
   buttonText: { color: 'white', fontWeight: 'bold' },
+<<<<<<< HEAD
   gameOverText: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginVertical: 20, color: 'red' },
+=======
+>>>>>>> c66b3b2 (feat : WebApplication Disponible)
 });
