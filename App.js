@@ -11,6 +11,8 @@ export default function App() {
     imageUrl: '',
     selected: '',
     feedback: '',
+    explanation: '',
+    tip: '',
     score: 0,
     health: 100
   });
@@ -27,7 +29,9 @@ export default function App() {
       correctAnswer: data.answer,
       imageUrl: data.image,
       selected: '',
-      feedback: ''
+      feedback: '',
+      tip: data.tip,
+      explanation: data.explanation
     }));
     setLoading(false);
   };
@@ -72,6 +76,8 @@ export default function App() {
             imageUrl: '',
             selected: '',
             feedback: '',
+            tip: '',
+            explanations: '',
             score: 0,
             health: 100
           });
