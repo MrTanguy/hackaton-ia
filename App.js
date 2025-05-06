@@ -322,7 +322,6 @@ export default function App() {
           ) : (
             <QuestionCard quiz={quiz} handleSelect={handleSelect} />
           )}
-          <Text style={styles.score}>Score: {quiz.score}</Text>
           <TouchableOpacity style={styles.primaryButton} onPress={loadQuestion}>
             <Text style={styles.buttonText}>
               {quiz.question ? 'Next Question' : 'Start Quiz'}
