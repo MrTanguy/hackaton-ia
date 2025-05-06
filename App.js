@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import QuestionCard from './components/QuestionCard';
 import memoryPhrases from './data/memoryPhrases.json';
 import { fetchQuestion } from './lib/ai';
@@ -28,6 +29,9 @@ export default function App() {
   const [memoryCards, setMemoryCards] = useState([]);
   const [selectedCards, setSelectedCards] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState([]);
+  const [memoryError, setMemoryError] = useState('');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showRestartButton, setShowRestartButton] = useState(false);
 
   useEffect(() => {
     const loadLeaderboard = async () => {
@@ -129,6 +133,7 @@ export default function App() {
     initializeMemoryGame();
   };
 
+  // Prioritize memoryGameStarted, then gameOver, then !quizStarted
   if (memoryGameStarted) {
     return (
       <SafeAreaView style={styles.container}>
@@ -163,68 +168,43 @@ export default function App() {
     );
   }
 
-  if (!quizStarted) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>🌍 EcoGames</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Entrez votre pseudo"
-          value={pseudo}
-          onChangeText={setPseudo}
-        />
-        <View style={styles.row}>
-          <View style={styles.column}>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: pseudo ? '#16a34a' : '#ccc' }]}
-              onPress={() => {
-                if (pseudo) {
-                  setQuizStarted(true);
-                  loadQuestion();
-                }
-              }}
-              disabled={!pseudo}
-            >
-              <Text style={styles.buttonText}>Start Quiz</Text>
-            </TouchableOpacity>
-            <Text style={styles.leaderboardTitle}>Classement Quiz :</Text>
-            <FlatList
-              data={leaderboard}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <Text style={styles.leaderboardItem}>
-                  {item.pseudo}: {item.score}
-                </Text>
-              )}
-            />
-          </View>
-          <View style={styles.column}>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: pseudo ? '#16a34a' : '#ccc' }]}
-              onPress={() => {
-                if (pseudo) {
-                  startMemoryGame();
-                }
-              }}
-              disabled={!pseudo}
-            >
-              <Text style={styles.buttonText}>Start Memory Game</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   if (gameOver) {
+    // Fallback: show restart button after 2 seconds if not already shown
+    if (!showRestartButton) {
+      setTimeout(() => setShowRestartButton(true), 2000);
+    }
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>🌍 EcoQuiz</Text>
+        <View style={styles.gameHeaderRow}>
+          <Image source={require('./assets/images/icon.png')} style={styles.smallLogo} />
+          <Text style={styles.smallTitle}>EcoGames</Text>
+        </View>
+        <View style={styles.leaderboardBox}>
+          <Text style={styles.leaderboardTitle}>Classement</Text>
+          <FlatList
+            data={leaderboard}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item, index }) => (
+              <View style={styles.leaderboardRow}>
+                <Text style={styles.leaderboardItem}>{index + 1}. {item.pseudo}</Text>
+                <Text style={styles.leaderboardItem}>{item.score} pts</Text>
+              </View>
+            )}
+          />
+        </View>
         <Text style={styles.gameOverText}>Vous avez perdu !</Text>
-        <Text style={styles.score}>Score final : {quiz.score}</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => {
+        <View style={styles.leftPanel}>
+          <Text style={styles.leaderboardTitle}>Score final</Text>
+          <Text style={styles.scoreBox}>{quiz.score}</Text>
+        </View>
+        <View style={{ alignItems: 'center', marginVertical: 20 }}>
+          <Image
+            source={require('./assets/images/gameover.gif')}
+            style={{ width: 160, height: 160, resizeMode: 'contain', marginVertical: 10 }}
+          />
+        </View>
+        {showRestartButton && (
+          <TouchableOpacity style={styles.primaryButton} onPress={() => {
             saveScore();
             setGameOver(false);
             setQuizStarted(false);
@@ -238,61 +218,111 @@ export default function App() {
               score: 0,
               health: 100
             });
+            setShowRestartButton(false);
           }}>
-          <Text style={styles.buttonText}>Sauvegarder</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => {
-          setGameOver(false);
-          setQuiz({
-            question: '',
-            options: [],
-            correctAnswer: '',
-            imageUrl: '',
-            selected: '',
-            feedback: '',
-            tip: '',
-            explanations: '',
-            score: 0,
-            health: 100
-          });
+            <Text style={styles.buttonText}>Recommencer</Text>
+          </TouchableOpacity>
+        )}
+      </SafeAreaView>
+    );
+  }
 
-          loadQuestion();
-        }}>
-          <Text style={styles.buttonText}>Recommencer</Text>
+  if (!quizStarted) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <TouchableOpacity
+          style={[styles.memoryButton, !pseudo && styles.disabledButton]}
+          onPress={() => {
+            if (!pseudo) {
+              setMemoryError("Veuillez entrer un pseudo pour jouer au Memory");
+              setTimeout(() => setMemoryError(''), 2000);
+              return;
+            }
+            startMemoryGame();
+          }}
+        >
+          <Text style={styles.memoryButtonText}>Memory</Text>
         </TouchableOpacity>
-        <Text style={styles.leaderboardTitle}>Classement :</Text>
-        <FlatList
-          data={leaderboard}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <Text style={styles.leaderboardItem}>
-              {item.pseudo}: {item.score}
-            </Text>
-          )}
+        {memoryError ? (
+          <Text style={styles.errorText}>{memoryError}</Text>
+        ) : null}
+        <View style={styles.leaderboardBox}>
+          <Text style={styles.leaderboardTitle}>Classement</Text>
+          <FlatList
+            data={leaderboard}
+            keyExtractor={(item, index) => index.toString()}
+            contentContainerStyle={styles.leaderboardContainer}
+            renderItem={({ item, index }) => (
+              <View style={styles.leaderboardRow}>
+                <Text style={styles.leaderboardItem}>{index + 1}. {item.pseudo}</Text>
+                <Text style={styles.leaderboardItem}>{item.score} pts</Text>
+              </View>
+            )}
+          />
+        </View>
+        <View style={styles.header}>
+          <Image source={require('./assets/images/icon.png')} style={styles.logo} />
+          <Text style={styles.title}>EcoGames</Text>
+          <Text style={styles.subtitle}>Teste tes connaissances et ta mémoire pour sauver la planète 🌿</Text>
+        </View>
+        <TextInput
+          style={styles.input}
+          placeholder="Pseudo Name" 
+          value={pseudo}
+          onChangeText={setPseudo}
         />
+        <TouchableOpacity
+          style={[styles.primaryButton, !pseudo && styles.disabledButton]}
+          onPress={() => {
+            setQuizStarted(true);
+            loadQuestion();
+          }}
+          disabled={!pseudo}
+        >
+          <Text style={styles.buttonText}>Start Quiz</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>🌍 EcoQuiz</Text>
-      <View style={styles.barContainer}>
-        <Text>Planet Health: {quiz.health} / 100</Text>
-        <View style={styles.healthBarBg}>
-          <View style={[styles.healthBar, { width: `${quiz.health}%` }]} />
+      <View style={styles.gameHeaderRow}>
+        <Image source={require('./assets/images/icon.png')} style={styles.smallLogo} />
+        <Text style={styles.smallTitle}>EcoGames</Text>
+      </View>
+
+      <View style={styles.healthBarBox}>
+        <Text style={styles.healthText}>🌿 Santé Planète :</Text>
+        <Text style={styles.healthIcons}>
+          {Array.from({ length: 5 }).map((_, idx) =>
+            quiz.health >= (idx + 1) * 20 ? '💚' : '🖤'
+          ).join(' ')}
+        </Text>
+      </View>
+
+      <View style={styles.quizContentRow}>
+        <View style={styles.leftPanel}>
+          <Text style={styles.leaderboardTitle}>Score</Text>
+          <Text style={styles.scoreBox}>{quiz.score}</Text>
+        </View>
+
+        <View style={styles.mainQuizContent}>
+          {loading ? (
+            <ActivityIndicator size="large" color="green" />
+          ) : (
+            <QuestionCard quiz={quiz} handleSelect={handleSelect} />
+          )}
+          <Text style={styles.score}>Score: {quiz.score}</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={loadQuestion}>
+            <Text style={styles.buttonText}>
+              {quiz.question ? 'Next Question' : 'Start Quiz'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
-      {loading ? (
-        <ActivityIndicator size="large" color="green" />
-      ) : (
-        <QuestionCard quiz={quiz} handleSelect={handleSelect} />
-      )}
-      <Text style={styles.score}>Score: {quiz.score}</Text>
-      {quiz.selected && !gameOver && (
-          <TouchableOpacity style={styles.button} onPress={loadQuestion}>
-            <Text style={styles.buttonText}>Next Question</Text>
-          </TouchableOpacity>
+      {showConfetti && (
+        <ConfettiCannon count={80} origin={{ x: -10, y: 0 }} fadeOut />
       )}
     </SafeAreaView>
   );
@@ -300,7 +330,60 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#e0fce1' },
-  title: { fontSize: 32, fontWeight: 'bold', textAlign: 'center', marginVertical: 20 },
+  header: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  logo: {
+    width: 200,
+    height: 200,
+    resizeMode: 'contain',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    color: '#065f46',
+    marginTop: 8,
+  },
+  leaderboardBox: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 160,
+    backgroundColor: '#ffffffaa',
+    borderRadius: 10,
+    padding: 10,
+  },
+  leaderboardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 6,
+    color: '#065f46',
+  },
+  leaderboardContainer: {
+    paddingHorizontal: 20,
+    marginTop: 10,
+  },
+  leaderboardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderColor: '#d1fae5',
+  },
+  leaderboardItem: {
+    fontSize: 16,
+    color: '#065f46',
+  },
   barContainer: { marginBottom: 10 },
   healthBarBg: { height: 10, backgroundColor: '#ccc', borderRadius: 5, marginTop: 4 },
   healthBar: { height: 10, backgroundColor: '#4ade80', borderRadius: 5 },
@@ -308,12 +391,7 @@ const styles = StyleSheet.create({
   button: { backgroundColor: '#16a34a', padding: 10, borderRadius: 10, alignItems: 'center', marginTop: 10 },
   buttonText: { color: 'white', fontWeight: 'bold' },
   gameOverText: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginVertical: 20, color: 'red' },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 5, padding: 10, marginVertical: 10 },
-  leaderboardTitle: { fontSize: 20, fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
-  leaderboardItem: { fontSize: 16, textAlign: 'center', marginVertical: 5 },
   memoryInfo: { fontSize: 16, textAlign: 'center', marginVertical: 10, color: '#16a34a' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
-  column: { flex: 1, alignItems: 'center', marginHorizontal: 10 },
   memoryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 20 },
   memoryCard: {
     width: 60,
@@ -326,4 +404,112 @@ const styles = StyleSheet.create({
   },
   memoryCardFlipped: { backgroundColor: '#4ade80' },
   memoryCardText: { fontSize: 24, fontWeight: 'bold' },
+
+  homeCentered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  primaryButton: {
+    alignSelf: 'center',
+    backgroundColor: '#16a34a',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 20,
+    marginTop: 30,
+  },
+  memoryButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    backgroundColor: '#16a34a',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+  },
+  memoryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  }
+  ,
+  input: {
+    borderWidth: 1,
+    borderColor: '#a3d9a5',
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#ffffff',
+    marginTop: 20,
+    marginBottom: 10,
+    fontSize: 14,
+    alignSelf: 'center',
+    width: '15%',
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 13,
+    textAlign: 'left',
+    position: 'absolute',
+    top: 50,
+    left: 20,
+  },
+  healthBarBox: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  healthText: {
+    fontSize: 14,
+    color: '#064e3b',
+    marginBottom: 4,
+  },
+  healthIcons: {
+    fontSize: 22,
+  },
+  gameHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    gap: 8,
+  },
+  smallLogo: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
+  },
+  smallTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#065f46',
+  },
+
+  quizContentRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    width: '100%',
+    gap: 20,
+    marginTop: 20,
+  },
+  leftPanel: {
+    width: 100,
+    backgroundColor: '#d1fae5',
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+  },
+  scoreBox: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#065f46',
+    marginTop: 8,
+  },
+  mainQuizContent: {
+    flex: 1,
+    maxWidth: 800,
+    alignItems: 'center',
+  }
 });
