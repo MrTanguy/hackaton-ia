@@ -72,6 +72,15 @@ export default function App() {
     setQuiz(prev => {
       const newHealth = isCorrect ? prev.health : prev.health - 20;
       const isGameOver = newHealth <= 0;
+    if (isCorrect) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 2000);
+    }
+    setQuiz(prev => ({
+      ...prev,
+      selected: option,
+      feedback: isCorrect ? '✅ Correct!' : '❌ Oops!'
+    }));
 
       if (isGameOver) {
         setGameOver(true);
