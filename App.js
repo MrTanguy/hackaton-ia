@@ -12,6 +12,8 @@ export default function App() {
     imageUrl: '',
     selected: '',
     feedback: '',
+    explanation: '',
+    tip: '',
     score: 0,
     health: 100
   });
@@ -48,7 +50,9 @@ export default function App() {
       correctAnswer: data.answer,
       imageUrl: data.image,
       selected: '',
-      feedback: ''
+      feedback: '',
+      tip: data.tip,
+      explanation: data.explanation
     }));
     setLoading(false);
   };
@@ -135,7 +139,22 @@ export default function App() {
               score: 0,
               health: 100
             });
-          }}>
+          }}/>
+        <TouchableOpacity style={styles.button} onPress={() => {
+          setGameOver(false);
+          setQuiz({
+            question: '',
+            options: [],
+            correctAnswer: '',
+            imageUrl: '',
+            selected: '',
+            feedback: '',
+            tip: '',
+            explanations: '',
+            score: 0,
+            health: 100
+          });
+        }}>
           <Text style={styles.buttonText}>Recommencer</Text>
         </TouchableOpacity>
         <Text style={styles.leaderboardTitle}>Classement :</Text>
@@ -167,6 +186,9 @@ export default function App() {
         <QuestionCard quiz={quiz} handleSelect={handleSelect} />
       )}
       <Text style={styles.score}>Score: {quiz.score}</Text>
+      <TouchableOpacity style={styles.button} onPress={loadQuestion}>
+        <Text style={styles.buttonText}>{quiz.question ? 'Next Question' : 'Start Quiz'}</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
