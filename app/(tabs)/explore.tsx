@@ -1,110 +1,117 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+const cards = [
+  { id: 1, value: '🌳', matched: false },
+  { id: 2, value: '🌳', matched: false },
+  { id: 3, value: '🌍', matched: false },
+  { id: 4, value: '🌍', matched: false },
+  { id: 5, value: '♻️', matched: false },
+  { id: 6, value: '♻️', matched: false },
+  { id: 7, value: '💧', matched: false },
+  { id: 8, value: '💧', matched: false },
+];
 
-export default function TabTwoScreen() {
+const facts = [
+  "Les arbres absorbent le dioxyde de carbone et produisent de l'oxygène.",
+  "La Terre est composée à 70% d'eau.",
+  "Recycler permet de réduire les déchets et de préserver les ressources naturelles.",
+  "L'eau douce est une ressource précieuse et limitée.",
+];
+
+export default function MemoryGame() {
+  const [shuffledCards, setShuffledCards] = useState(shuffleArray([...cards]));
+  const [selectedCards, setSelectedCards] = useState<number[]>([]);
+  const [matchedPairs, setMatchedPairs] = useState(0);
+  const [fact, setFact] = useState<string | null>(null);
+
+  function shuffleArray(array: typeof cards) {
+    return array.sort(() => Math.random() - 0.5);
+  }
+
+  const handleCardPress = (index: number) => {
+    if (selectedCards.length === 2 || shuffledCards[index].matched) return;
+
+    const newSelectedCards = [...selectedCards, index];
+    setSelectedCards(newSelectedCards);
+
+    if (newSelectedCards.length === 2) {
+      const [firstIndex, secondIndex] = newSelectedCards;
+      if (shuffledCards[firstIndex].value === shuffledCards[secondIndex].value) {
+        const updatedCards = [...shuffledCards];
+        updatedCards[firstIndex].matched = true;
+        updatedCards[secondIndex].matched = true;
+        setShuffledCards(updatedCards);
+        setMatchedPairs(matchedPairs + 1);
+        setFact(facts[matchedPairs % facts.length]);
+      }
+      setTimeout(() => setSelectedCards([]), 1000);
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Text style={styles.title}>Jeu de mémoire écologique</Text>
+      {fact && <Text style={styles.fact}>{fact}</Text>}
+      <FlatList
+        data={shuffledCards}
+        numColumns={4}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item, index }) => (
+          <TouchableOpacity
+            style={[
+              styles.card,
+              item.matched || selectedCards.includes(index) ? styles.cardRevealed : styles.cardHidden,
+            ]}
+            onPress={() => handleCardPress(index)}
+          >
+            <Text style={styles.cardText}>
+              {item.matched || selectedCards.includes(index) ? item.value : '?'}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+    backgroundColor: '#000', // Fond noir
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#fff', // Texte blanc
+  },
+  fact: {
+    fontSize: 16,
+    fontStyle: 'italic',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#fff', // Texte blanc
+  },
+  card: {
+    width: 60,
+    height: 60,
+    margin: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  cardHidden: {
+    backgroundColor: '#333', // Couleur sombre pour les cartes cachées
+  },
+  cardRevealed: {
+    backgroundColor: '#a0d995', // Couleur claire pour les cartes révélées
+  },
+  cardText: {
+    fontSize: 24,
+    color: '#fff', // Texte blanc
   },
 });

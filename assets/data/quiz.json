@@ -1,0 +1,20 @@
+[
+  {
+    "question": "Quelle est la meilleure façon de réduire les déchets ?",
+    "options": ["Recycler", "Réduire", "Réutiliser"],
+    "answer": "Réduire",
+    "explanation": "Réduire est la meilleure option car cela diminue directement la quantité de déchets produits."
+  },
+  {
+    "question": "Quelle source d'énergie est renouvelable ?",
+    "options": ["Charbon", "Énergie solaire", "Pétrole"],
+    "answer": "Énergie solaire",
+    "explanation": "L'énergie solaire est renouvelable car elle provient du soleil, une source inépuisable."
+  },
+  {
+    "question": "Quelle action est la plus écologique ?",
+    "options": ["Utiliser des sacs en plastique", "Composter les déchets organiques", "Acheter des produits jetables"],
+    "answer": "Composter les déchets organiques",
+    "explanation": "Composter permet de réduire les déchets organiques et de produire un engrais naturel."
+  }
+]
