@@ -65,27 +65,24 @@ export default function App() {
 
   const handleSelect = (option) => {
     const isCorrect = option === quiz.correctAnswer;
-    setQuiz(prev => ({
-      ...prev,
-      selected: option,
-      feedback: isCorrect ? '✅ Correct!' : '❌ Oops!'
-    }));
+    setQuiz(prev => {
+      const newHealth = isCorrect ? prev.health : prev.health - 20;
+      const isGameOver = newHealth <= 0;
 
-    setTimeout(() => {
-      setQuiz(prev => {
-        const newHealth = isCorrect ? prev.health : prev.health - 20;
-        if (newHealth <= 0) {
-          setGameOver(true);
-          return { ...prev, health: 0 };
-        }
-        return {
-          ...prev,
-          score: isCorrect ? prev.score + 1 : prev.score,
-          health: newHealth
-        };
-      });
-      if (!gameOver) loadQuestion();
-    }, 1500);
+      if (isGameOver) {
+        setGameOver(true);
+      }
+
+      return {
+        ...prev,
+        selected: option,
+        feedback: isCorrect ? '✅ Correct!' : '❌ Oops!',
+        tip: prev.tip,
+        explanation: prev.explanation,
+        score: isCorrect ? prev.score + 1 : prev.score,
+        health: isCorrect ? prev.health : newHealth
+      };
+    });
   };
 
   const initializeMemoryGame = () => {
@@ -241,7 +238,9 @@ export default function App() {
               score: 0,
               health: 100
             });
-          }}/>
+          }}>
+          <Text style={styles.buttonText}>Sauvegarder</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={() => {
           setGameOver(false);
           setQuiz({
@@ -256,6 +255,8 @@ export default function App() {
             score: 0,
             health: 100
           });
+
+          loadQuestion();
         }}>
           <Text style={styles.buttonText}>Recommencer</Text>
         </TouchableOpacity>
@@ -288,9 +289,11 @@ export default function App() {
         <QuestionCard quiz={quiz} handleSelect={handleSelect} />
       )}
       <Text style={styles.score}>Score: {quiz.score}</Text>
-      <TouchableOpacity style={styles.button} onPress={loadQuestion}>
-        <Text style={styles.buttonText}>{quiz.question ? 'Next Question' : 'Start Quiz'}</Text>
-      </TouchableOpacity>
+      {quiz.selected && !gameOver && (
+          <TouchableOpacity style={styles.button} onPress={loadQuestion}>
+            <Text style={styles.buttonText}>Next Question</Text>
+          </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
